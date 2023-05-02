@@ -1,13 +1,36 @@
-import java.io.File;
-import java.util.Arrays;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+
+import java.io.*;
+import java.lang.reflect.Type;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.List;
 
 public class Main {
-    public static void main(String[] args) throws Exception {
-        BooleanSearchEngine engine = new BooleanSearchEngine(new File("pdfs"));
-        System.out.println(engine.search("бизнес"));
+    final static String PATH = "pdfs";
+    public static void main(String[] args) {
+        int port = 8989;
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            while (true) {
+                try (Socket connection = serverSocket.accept();
+                     BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                     PrintWriter out = new PrintWriter(connection.getOutputStream(), true)) {
 
-        // здесь создайте сервер, который отвечал бы на нужные запросы
-        // слушать он должен порт 8989
-        // отвечать на запросы /{word} -> возвращённое значение метода search(word) в JSON-формате
+                    String word = in.readLine();
+                    BooleanSearchEngine engine = new BooleanSearchEngine(new File(PATH));
+                    List<PageEntry> pageEntryList = engine.search(word);
+
+                    Type type = new TypeToken<List<PageEntry>>() {}.getType();
+                    Gson gson = new GsonBuilder().create();
+                    out.println(gson.toJson(pageEntryList, type));
+                } catch (IOException exception) {
+                    exception.printStackTrace();
+                }
+            }
+        } catch (IOException exception) {
+            exception.printStackTrace();
+        }
     }
 }
