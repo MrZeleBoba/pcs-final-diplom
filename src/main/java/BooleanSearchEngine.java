@@ -46,10 +46,8 @@ public class BooleanSearchEngine implements SearchEngine {
 
     @Override
     public List<PageEntry> search(String word) {
-        List<PageEntry> list = wordList.get(word);
-        if (word.equals(wordList)) {
-            list.add((PageEntry) wordList.entrySet());
-        }
+        String f = word.toLowerCase();
+        List<PageEntry> list = wordList.getOrDefault(f, Collections.emptyList());
         Collections.sort(list);
         return list;
     }
