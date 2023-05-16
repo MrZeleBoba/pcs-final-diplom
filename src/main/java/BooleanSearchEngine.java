@@ -1,44 +1,54 @@
 import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.canvas.parser.PdfTextExtractor;
+import ru.galishchev.IndexedStorage;
+import ru.galishchev.PageEntry;
+
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-public class BooleanSearchEngine implements SearchEngine {
-    private final Map<String, List<PageEntry>> wordList = new HashMap<>();
 
-    public BooleanSearchEngine(File pdfsDir) throws IOException {
-        File[] files = pdfsDir.listFiles();
-        if (files != null && files.length > 0) {
-            for (File file : files) {
-                if (file.getName().contains(".pdf")) {
-                    PdfDocument document = new PdfDocument(new PdfReader(file));
-                    for (int i = 0; i < document.getNumberOfPages(); i++) {
-                        PdfPage page = document.getPage(i + 1);
-                        String text = PdfTextExtractor.getTextFromPage(page);// получить текст со страницы
-                        String[] words = text.split("\\P{IsAlphabetic}+");// разбить текст на слова
-                        Map<String, Integer> freqs = new HashMap<>();
-                        for (var word : words) {
-                            if (word.isEmpty()) {
-                                continue;
-                            }
-                            int f = freqs.getOrDefault(word, 0) + 1;
-                            freqs.put(word.toLowerCase(), f);
-                        }
-                        for (String word : freqs.keySet()) {
-                            PageEntry pageEntry = new PageEntry(file.getName(), i, freqs.get(word));
-                            if (wordList.containsKey(word)) {
-                                wordList.get(word).add(pageEntry);
-                            } else {
-                                wordList.put(word, new ArrayList<>());
-                                wordList.get(word).add(pageEntry);
-                            }
-                        }
+public class BooleanSearchEngine implements SearchEngine {
+    protected static Map<String, List<PageEntry>> wordIndexingStorage;
+
+
+    public BooleanSearchEngine() throws IOException {
+        wordIndexingStorage = IndexedStorage.getIndexedStorage().getStorage();
+
+        File[] arrOfPdfs = new File("pdfs").listFiles();
+
+        for (int i = 0; i < Objects.requireNonNull(arrOfPdfs).length; i++) {
+            var doc = new PdfDocument(new PdfReader(arrOfPdfs[i]));
+
+            for (int j = 0; j < doc.getNumberOfPages(); j++) {
+                var file = doc.getPage(j + 1);
+                var text = PdfTextExtractor.getTextFromPage(file);
+
+                String[] words = text.split("\\P{IsAlphabetic}+");
+
+                Map<String, Integer> freqs = new HashMap<>();
+                for (var word : words) {
+                    if (word.isEmpty()) {
+                        continue;
                     }
-                    document.close();
+                    freqs.put(word.toLowerCase(), freqs.getOrDefault(word, 0) + 1);
+                }
+
+                String namePDFFile = doc.getDocumentInfo().getTitle();
+
+                for (Map.Entry<String, Integer> entry : freqs.entrySet()) {
+                    String tmpWord = entry.getKey();
+                    int tmpValue = entry.getValue();
+
+                    List<PageEntry> listPageTmp = new ArrayList<>();
+                    listPageTmp.add(new PageEntry(namePDFFile, j + 1, tmpValue));
+
+                    if (wordIndexingStorage.containsKey(tmpWord)) {
+                        wordIndexingStorage.get(tmpWord).add(new PageEntry(namePDFFile, j + 1, tmpValue));
+                    } else
+                        wordIndexingStorage.put(tmpWord, listPageTmp);
                 }
             }
         }
@@ -46,10 +56,9 @@ public class BooleanSearchEngine implements SearchEngine {
 
     @Override
     public List<PageEntry> search(String word) {
-        String f = word.toLowerCase();
-        List<PageEntry> list = wordList.getOrDefault(f, Collections.emptyList());
+        String lowReg = word.toLowerCase();
+        List<PageEntry> list = wordIndexingStorage.getOrDefault(lowReg, Collections.emptyList());
         Collections.sort(list);
         return list;
     }
-
 }
