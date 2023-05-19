@@ -34,6 +34,7 @@ public class BooleanSearchEngine implements SearchEngine {
                         continue;
                     }
                     freqs.put(word.toLowerCase(), freqs.getOrDefault(word, 0) + 1);
+
                 }
 
                 String namePDFFile = doc.getDocumentInfo().getTitle();
@@ -57,8 +58,6 @@ public class BooleanSearchEngine implements SearchEngine {
     @Override
     public List<PageEntry> search(String word) {
         String lowReg = word.toLowerCase();
-        List<PageEntry> list = wordIndexingStorage.getOrDefault(lowReg, Collections.emptyList());
-        Collections.sort(list);
-        return list;
+        return wordIndexingStorage.getOrDefault(lowReg, Collections.emptyList());
     }
 }

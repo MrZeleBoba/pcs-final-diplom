@@ -11,16 +11,13 @@ public class PageEntry implements Comparable<PageEntry> {
         this.count = count;
     }
 
+    public int getCount() {
+        return count;
+    }
+
     @Override
     public int compareTo(PageEntry o) {
-        int result = o.count - this.count;
-        if (result == 0) {
-            result = this.pdfName.compareTo(o.pdfName);
-            if (result == 0) {
-                result = this.page - o.page;
-            }
-        }
-        return result;
+        return Integer.compare(o.getCount(), this.getCount());
     }
 
     @Override

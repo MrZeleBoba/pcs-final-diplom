@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -19,6 +20,7 @@ public class Main {
         try {
             BooleanSearchEngine engine = new BooleanSearchEngine();
             List<PageEntry> result = engine.search("бизнес");
+            Collections.sort(result);
 
             System.out.println("Результат по слову \"бизнес\"");
             for (PageEntry pageEntry : result) {
