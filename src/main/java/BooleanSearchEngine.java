@@ -36,6 +36,9 @@ public class BooleanSearchEngine implements SearchEngine {
                     freqs.put(word.toLowerCase(), freqs.getOrDefault(word, 0) + 1);
 
                 }
+                for (var entry : wordIndexingStorage.entrySet()) {
+                    Collections.sort(entry.getValue());
+                }
 
                 String namePDFFile = doc.getDocumentInfo().getTitle();
 
